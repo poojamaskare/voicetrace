@@ -368,10 +368,10 @@ export default function DashboardCards({
               )}
             </div>
 
-            {/* Recent Sales & Expenses */}
-            <div className="card p-5 space-y-5">
+            {/* Recent Sales & Expenses Container */}
+            <div className="flex flex-col gap-5">
               {/* Recent Sales */}
-              <div>
+              <div className="card p-5 flex flex-col">
                 <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">
                   Recent Sales
                 </h3>
@@ -393,21 +393,23 @@ export default function DashboardCards({
                           </p>
                           <p className="text-xs text-text-muted mt-0.5">{entry.date}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-base font-bold text-emerald-600">
-                            +₹{entry.items.reduce((s, i) => s + i.total, 0)}
-                          </p>
-                          <p className="text-xs text-text-muted">
-                            {entry.items?.length || 0} items
-                          </p>
+                        <div className="flex items-center">
+                          <div className="text-right">
+                            <p className="text-base font-bold text-emerald-600">
+                              +₹{entry.items.reduce((s, i) => s + i.total, 0)}
+                            </p>
+                            <p className="text-xs text-text-muted">
+                              {entry.items?.length || 0} items
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => onDeleteEntry(entry.id)}
+                            className="p-1.5 ml-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-200 transition-colors"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => onDeleteEntry(entry.id)}
-                          className="p-1.5 ml-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-200 transition-colors"
-                          title="Delete entry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -415,11 +417,15 @@ export default function DashboardCards({
               </div>
 
               {/* Recent Expenses */}
-              {recentExpenseEntries.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-4">
-                    Recent Expenses
-                  </h3>
+              <div className="card p-5 flex flex-col">
+                <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-4">
+                  Recent Expenses
+                </h3>
+                {recentExpenseEntries.length === 0 ? (
+                  <p className="text-text-muted text-sm text-center py-4">
+                    No expenses recorded yet.
+                  </p>
+                ) : (
                   <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 pb-1 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
                     {recentExpenseEntries.map((entry, i) => (
                       <div
@@ -440,23 +446,25 @@ export default function DashboardCards({
                             )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-base font-bold text-red-600">
-                            -₹{entry.items.reduce((s, i) => s + i.total, 0)}
-                          </p>
+                        <div className="flex items-center">
+                          <div className="text-right">
+                            <p className="text-base font-bold text-red-600">
+                              -₹{entry.items.reduce((s, i) => s + i.total, 0)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => onDeleteEntry(entry.id)}
+                            className="p-1.5 ml-2 rounded-lg text-red-300 hover:text-red-600 hover:bg-red-100 transition-colors"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => onDeleteEntry(entry.id)}
-                          className="p-1.5 ml-2 rounded-lg text-red-300 hover:text-red-600 hover:bg-red-100 transition-colors"
-                          title="Delete entry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

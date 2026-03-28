@@ -28,4 +28,13 @@ export const dummySalesEntries: Omit<SaleEntry, 'id' | 'created_at'>[] = [
     ],
     total: 685,
   },
+  // Adding sample expenses to be visible on the dashboard
+  {
+    date: new Date().toISOString().split('T')[0], // today
+    items: [
+      { name: 'Petrol', qty: 1, price: 100, total: 100, type: 'expense', category: 'transport' },
+      { name: 'Rickshaw', qty: 1, price: 50, total: 50, type: 'expense', category: 'transport' },
+    ],
+    total: 150,
+  },
 ];
