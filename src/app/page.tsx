@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
-import VoiceRecorder from '@/components/VoiceRecorder';
-import TranscriptionResult from '@/components/TranscriptionResult';
-import { SaleItem } from '@/lib/supabase';
+import { useState, useCallback } from "react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
+import VoiceRecorder from "@/components/VoiceRecorder";
+import TranscriptionResult from "@/components/TranscriptionResult";
+import ChatFab from "@/components/chat/ChatFab";
+import { SaleItem } from "@/lib/supabase";
 
 interface AnalyzedData {
   items: SaleItem[];
@@ -31,27 +32,29 @@ export default function HomePage() {
     setIsAnalyzing(true);
 
     try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
 
       const data = await response.json();
 
       if (!response.ok || data.error) {
-        throw new Error(data.error || 'Analysis failed');
+        throw new Error(data.error || "Analysis failed");
       }
 
       if (!data.items || !Array.isArray(data.items)) {
-        throw new Error('Invalid response format from AI');
+        throw new Error("Invalid response format from AI");
       }
 
       setAnalyzedData(data);
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error("Analysis error:", error);
       setAnalysisError(
-        error instanceof Error ? error.message : 'Failed to analyze sales data. Please try again.'
+        error instanceof Error
+          ? error.message
+          : "Failed to analyze sales data. Please try again.",
       );
     } finally {
       setIsAnalyzing(false);
@@ -63,9 +66,9 @@ export default function HomePage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/sales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: analyzedData.date,
           items: analyzedData.items,
@@ -74,12 +77,12 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        throw new Error('Save failed');
+        throw new Error("Save failed");
       }
 
       setSaved(true);
     } catch (error) {
-      console.error('Save error:', error);
+      console.error("Save error:", error);
     } finally {
       setIsSaving(false);
     }
@@ -96,9 +99,9 @@ export default function HomePage() {
               VoiceTrace
             </h2>
             <p className="text-text-secondary text-lg sm:text-xl max-w-md mx-auto leading-relaxed">
-              Speak your sales in{' '}
-              <span className="text-indigo-600 font-medium">Hindi</span>,{' '}
-              <span className="text-sky-600 font-medium">English</span>, or{' '}
+              Speak your sales in{" "}
+              <span className="text-indigo-600 font-medium">Hindi</span>,{" "}
+              <span className="text-sky-600 font-medium">English</span>, or{" "}
               <span className="text-amber-600 font-medium">Hinglish</span>
             </p>
             <p className="text-text-muted text-sm">
@@ -107,7 +110,10 @@ export default function HomePage() {
           </div>
 
           {/* Voice Recorder */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div
+            className="animate-fade-in-up"
+            style={{ animationDelay: "0.2s" }}
+          >
             <VoiceRecorder
               onTranscriptionComplete={handleTranscription}
               isProcessing={isAnalyzing}
@@ -130,10 +136,16 @@ export default function HomePage() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-red-600 font-medium text-sm">Analysis Failed</p>
-                  <p className="text-text-muted text-sm mt-1">{analysisError}</p>
+                  <p className="text-red-600 font-medium text-sm">
+                    Analysis Failed
+                  </p>
+                  <p className="text-text-muted text-sm mt-1">
+                    {analysisError}
+                  </p>
                   <button
-                    onClick={() => transcription && handleTranscription(transcription)}
+                    onClick={() =>
+                      transcription && handleTranscription(transcription)
+                    }
                     className="flex items-center gap-1.5 mt-3 px-4 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -152,6 +164,8 @@ export default function HomePage() {
           Built for street vendors · Powered by AI
         </p>
       </footer>
+
+      <ChatFab />
     </div>
   );
 }
