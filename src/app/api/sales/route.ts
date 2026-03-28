@@ -100,3 +100,31 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return Response.json({ success: true, dummy: true });
+    }
+
+    const { error } = await supabase.from('sales').delete().eq('id', id);
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      return Response.json({ error: 'Failed to delete record' }, { status: 500 });
+    }
+
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error('Sales delete error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

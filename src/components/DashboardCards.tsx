@@ -15,6 +15,7 @@ import {
   Calendar,
   Zap,
   MoreHorizontal,
+  Trash2,
 } from 'lucide-react';
 import {
   BarChart,
@@ -38,6 +39,7 @@ interface DashboardCardsProps {
   } | null;
   isLoadingInsights: boolean;
   onRefreshInsights: () => void;
+  onDeleteEntry: (id: string) => void;
 }
 
 const CHART_COLORS = ['#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -63,6 +65,7 @@ export default function DashboardCards({
   insights,
   isLoadingInsights,
   onRefreshInsights,
+  onDeleteEntry,
 }: DashboardCardsProps) {
   const today = new Date().toISOString().split('T')[0];
   const todayEntries = entries.filter((e) => e.date === today);
@@ -123,7 +126,7 @@ export default function DashboardCards({
       items: (e.items || []).filter((i) => i.type !== 'expense'),
     }))
     .filter((e) => e.items.length > 0)
-    .slice(0, 5);
+    .slice(0, 20); // Keep reasonable limit but allow scrolling
 
   const recentExpenseEntries = entries
     .map((e) => ({
@@ -131,7 +134,7 @@ export default function DashboardCards({
       items: (e.items || []).filter((i) => i.type === 'expense'),
     }))
     .filter((e) => e.items.length > 0)
-    .slice(0, 5);
+    .slice(0, 20); // Keep reasonable limit but allow scrolling
 
   return (
     <div className="space-y-5">
@@ -301,7 +304,7 @@ export default function DashboardCards({
                   <YAxis tick={{ fontSize: 12, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
                   <Tooltip
                     contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, fontSize: 13 }}
-                    formatter={(value: number) => [`₹${value}`, 'Revenue']}
+                    formatter={(value: any) => [`₹${value}`, 'Revenue']}
                   />
                   <Bar dataKey="revenue" fill="#4F46E5" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -337,7 +340,7 @@ export default function DashboardCards({
                       </Pie>
                       <Tooltip
                         contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, fontSize: 13 }}
-                        formatter={(value: number) => [value, 'Quantity']}
+                        formatter={(value: any) => [value, 'Quantity']}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -377,7 +380,7 @@ export default function DashboardCards({
                     No sales recorded yet.
                   </p>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 pb-1 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
                     {recentSaleEntries.map((entry, i) => (
                       <div
                         key={entry.id}
@@ -398,6 +401,13 @@ export default function DashboardCards({
                             {entry.items?.length || 0} items
                           </p>
                         </div>
+                        <button
+                          onClick={() => onDeleteEntry(entry.id)}
+                          className="p-1.5 ml-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-200 transition-colors"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -410,7 +420,7 @@ export default function DashboardCards({
                   <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-4">
                     Recent Expenses
                   </h3>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 pb-1 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
                     {recentExpenseEntries.map((entry, i) => (
                       <div
                         key={`exp-${entry.id}`}
@@ -435,6 +445,13 @@ export default function DashboardCards({
                             -₹{entry.items.reduce((s, i) => s + i.total, 0)}
                           </p>
                         </div>
+                        <button
+                          onClick={() => onDeleteEntry(entry.id)}
+                          className="p-1.5 ml-2 rounded-lg text-red-300 hover:text-red-600 hover:bg-red-100 transition-colors"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>

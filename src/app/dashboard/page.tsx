@@ -109,6 +109,32 @@ export default function DashboardPage() {
     }
   }, [entries]);
 
+  // Delete an entry
+  const deleteEntry = useCallback(async (id: string) => {
+    // Optimistically update UI
+    setEntries((prev) => {
+      const newEntries = prev.filter((e) => e.id !== id);
+      try {
+        sessionStorage.setItem(
+          SALES_CACHE_KEY,
+          JSON.stringify({ entries: newEntries, timestamp: Date.now() })
+        );
+      } catch { /* ignore */ }
+      return newEntries;
+    });
+
+    try {
+      const res = await fetch(`/api/sales?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        console.error('Failed to delete entry from database');
+      }
+    } catch (err) {
+      console.error('Delete entry error:', err);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -162,6 +188,7 @@ export default function DashboardPage() {
               insights={insights}
               isLoadingInsights={isLoadingInsights}
               onRefreshInsights={refreshInsights}
+              onDeleteEntry={deleteEntry}
             />
           )}
         </div>
