@@ -1,17 +1,33 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/': { title: 'Home', subtitle: 'Record and analyze your sales' },
   '/dashboard': { title: 'Dashboard', subtitle: 'Your sales performance at a glance' },
   '/catalog': { title: 'Catalog', subtitle: 'Manage your items and products' },
+  '/add': { title: 'Add Entry', subtitle: 'Manually record sales and expenses' },
 };
 
 export default function Navbar() {
   const pathname = usePathname();
   const page = PAGE_TITLES[pathname] || { title: 'VoiceTrace', subtitle: '' };
+
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
+        setIsAddOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header
@@ -38,6 +54,36 @@ export default function Navbar() {
         >
           <Search className="w-[18px] h-[18px]" />
         </button>
+
+        {/* Add Entry Dropdown */}
+        <div className="relative" ref={addMenuRef}>
+          <button
+            onClick={() => setIsAddOpen(!isAddOpen)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white bg-primary hover:bg-primary-dark transition-colors shadow-sm"
+            aria-label="Add Entry"
+          >
+            <Plus className="w-[18px] h-[18px]" />
+          </button>
+          
+          {isAddOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white border border-border rounded-xl shadow-lg overflow-hidden py-1 z-50 animate-fade-in-up">
+              <Link
+                href="/add?type=sale"
+                onClick={() => setIsAddOpen(false)}
+                className="block px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-light hover:text-emerald-600 transition-colors"
+              >
+                Add Sales
+              </Link>
+              <Link
+                href="/add?type=expense"
+                onClick={() => setIsAddOpen(false)}
+                className="block px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-light hover:text-red-600 transition-colors"
+              >
+                Add Expenses
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Notifications */}
         <button
