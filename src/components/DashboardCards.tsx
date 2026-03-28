@@ -263,21 +263,30 @@ export default function DashboardCards({
                     <p className="text-text-secondary text-sm leading-relaxed">{insight}</p>
                   </div>
                 ))}
-                {insights.suggestion && (
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-sky-50 border border-sky-100 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                    <Target className="w-4 h-4 text-sky-500 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-semibold text-sky-700 mb-1">Tomorrow&apos;s Tip</p>
-                      <p className="text-text-secondary text-sm">{insights.suggestion}</p>
-                    </div>
-                  </div>
-                )}
-                {insights.top_item && (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                    <Star className="w-4 h-4 text-amber-500 shrink-0" />
-                    <p className="text-text-secondary text-sm">
-                      Top seller: <span className="font-semibold text-amber-700">{insights.top_item}</span>
-                    </p>
+                {(insights.suggestion || insights.top_item) && (
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    {insights.suggestion && (
+                      <div className="flex flex-col items-center pt-5 pb-3 px-3 rounded-2xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-100 animate-fade-in-up aspect-square text-center shadow-sm hover:shadow-md transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <Target className="w-4 h-4 md:w-5 md:h-5 text-sky-500" />
+                        </div>
+                        <p className="text-[9px] md:text-[10px] font-bold text-sky-600 uppercase tracking-widest mb-2 shrink-0">Tomorrow&apos;s Tip</p>
+                        <div className="flex-1 w-full overflow-y-auto scrollbar-thin scrollbar-thumb-sky-200 hover:scrollbar-thumb-sky-300 px-1">
+                          <p className="text-[11px] md:text-xs text-sky-950 font-medium leading-relaxed pb-1">{insights.suggestion}</p>
+                        </div>
+                      </div>
+                    )}
+                    {insights.top_item && (
+                      <div className="flex flex-col items-center pt-5 pb-3 px-3 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 animate-fade-in-up aspect-square text-center shadow-sm hover:shadow-md transition-all duration-300 group" style={{ animationDelay: '0.4s' }}>
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <Star className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
+                        </div>
+                        <p className="text-[9px] md:text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-2 shrink-0">Top Seller</p>
+                        <div className="flex-1 w-full overflow-y-auto scrollbar-thin scrollbar-thumb-amber-200 hover:scrollbar-thumb-amber-300 px-1 flex flex-col justify-center">
+                          <p className="text-xs md:text-sm text-amber-950 font-bold leading-tight pb-1">{insights.top_item}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

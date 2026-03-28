@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { Mic, LayoutDashboard } from 'lucide-react';
 import DashboardCards from '@/components/DashboardCards';
 import { SaleEntry } from '@/lib/supabase';
 
@@ -136,41 +134,10 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="w-full px-4 sm:px-8 py-4 flex items-center justify-between border-b border-border">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4.5 h-4.5">
-                <path d="M12 1a4 4 0 00-4 4v7a4 4 0 008 0V5a4 4 0 00-4-4z" />
-                <path d="M19 10v2a7 7 0 01-14 0v-2H3v2a9 9 0 004 7.47V22h2v-2.06A8.96 8.96 0 0012 21a8.96 8.96 0 003-.06V22h2v-2.53A9 9 0 0021 12v-2h-2z" />
-              </svg>
-            </div>
-            <h1 className="text-lg font-bold text-text-primary">VoiceTrace</h1>
-          </Link>
-        </div>
-        <Link
-          href="/"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-colors"
-        >
-          <Mic className="w-4 h-4" />
-          Record Sales
-        </Link>
-      </header>
-
+    <div className="flex-1 flex flex-col bg-background">
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 py-6">
         <div className="max-w-7xl mx-auto">
-          {/* Page Title */}
-          <div className="mb-6 animate-fade-in-up">
-            <h2 className="text-2xl font-bold text-text-primary mb-1">
-              Dashboard
-            </h2>
-            <p className="text-text-muted text-sm">
-              Your sales performance at a glance
-            </p>
-          </div>
 
           {/* Loading State */}
           {isLoading ? (
