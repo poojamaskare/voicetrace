@@ -1,7 +1,7 @@
 'use client';
 
 import { SaleItem } from '@/lib/supabase';
-import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, AlertTriangle } from 'lucide-react';
 
 interface TranscriptionResultProps {
   transcription: string | null;
@@ -10,6 +10,8 @@ interface TranscriptionResultProps {
     total_earnings: number;
     total_expenses?: number;
     date: string;
+    needs_clarification?: boolean;
+    clarification_message?: string;
   } | null;
   isAnalyzing: boolean;
   isSaving: boolean;
@@ -233,6 +235,22 @@ export default function TranscriptionResult({
               </div>
             )}
           </div>
+
+          {/* Clarification Banner */}
+          {analyzedData.needs_clarification && analyzedData.clarification_message && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 animate-fade-in-up mt-4">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800 mb-1">⚠ Price Mismatch Detected</p>
+                {analyzedData.clarification_message.split('\n').map((msg, i) => (
+                  <p key={i} className="text-sm text-amber-700 leading-relaxed">
+                    {msg}
+                  </p>
+                ))}
+                <p className="text-xs text-amber-500 mt-2">You can still save the best-guess values above, or re-record with the correct amount.</p>
+              </div>
+            </div>
+          )}
 
           {/* Save Button */}
           <div className="mt-6">

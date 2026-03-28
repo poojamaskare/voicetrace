@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "VoiceTrace — Voice to Business Intelligence",
@@ -23,7 +25,14 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+          <Navbar />
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
+

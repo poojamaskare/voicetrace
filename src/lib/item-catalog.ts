@@ -1,0 +1,89 @@
+/**
+ * Item price catalog — the "source of truth" for per-unit prices.
+ * The AI prompt is fed this catalog so it can intelligently calculate qty
+ * when the user only mentions a total amount.
+ *
+ * Example: "samosa worth 100rs" → price_per_unit = 25, qty = 100/25 = 4
+ */
+
+export interface CatalogItem {
+  name: string;
+  price_per_unit: number;
+  unit: string; // piece, plate, glass, kg, litre, etc.
+  category: 'sale' | 'expense';
+  aliases: string[]; // alternate names / Hindi variants
+}
+
+export const itemCatalog: CatalogItem[] = [
+  // ── Hot Beverages ──
+  { name: 'Chai',             price_per_unit: 10,  unit: 'glass',  category: 'sale', aliases: ['tea', 'चाय', 'chai patti'] },
+  { name: 'Coffee',           price_per_unit: 15,  unit: 'cup',    category: 'sale', aliases: ['कॉफ़ी', 'kaafi'] },
+
+  // ── Snacks ──
+  { name: 'Samosa',           price_per_unit: 25,  unit: 'piece',  category: 'sale', aliases: ['समोसा', 'samose'] },
+  { name: 'Vada Pav',         price_per_unit: 20,  unit: 'piece',  category: 'sale', aliases: ['वडा पाव', 'vada paav', 'vadapav'] },
+  { name: 'Pakoda',           price_per_unit: 20,  unit: 'plate',  category: 'sale', aliases: ['पकोड़ा', 'pakode', 'bhajiya'] },
+  { name: 'Kachori',          price_per_unit: 15,  unit: 'piece',  category: 'sale', aliases: ['कचोरी', 'kachodi'] },
+  { name: 'Pav Bhaji',        price_per_unit: 50,  unit: 'plate',  category: 'sale', aliases: ['पाव भाजी'] },
+  { name: 'Bread Omelette',   price_per_unit: 30,  unit: 'plate',  category: 'sale', aliases: ['ब्रेड आमलेट', 'omelette'] },
+  { name: 'Poha',             price_per_unit: 20,  unit: 'plate',  category: 'sale', aliases: ['पोहा'] },
+  { name: 'Upma',             price_per_unit: 20,  unit: 'plate',  category: 'sale', aliases: ['उपमा'] },
+
+  // ── Drinks ──
+  { name: 'Lassi',            price_per_unit: 25,  unit: 'glass',  category: 'sale', aliases: ['लस्सी'] },
+  { name: 'Nimbu Pani',       price_per_unit: 10,  unit: 'glass',  category: 'sale', aliases: ['नींबू पानी', 'lemonade', 'shikanji'] },
+  { name: 'Buttermilk',       price_per_unit: 10,  unit: 'glass',  category: 'sale', aliases: ['छाछ', 'chaas', 'mattha'] },
+  { name: 'Juice',            price_per_unit: 30,  unit: 'glass',  category: 'sale', aliases: ['जूस'] },
+
+  // ── Meals ──
+  { name: 'Thali',            price_per_unit: 80,  unit: 'plate',  category: 'sale', aliases: ['थाली'] },
+  { name: 'Biryani',          price_per_unit: 60,  unit: 'plate',  category: 'sale', aliases: ['बिरयानी'] },
+  { name: 'Dal Rice',         price_per_unit: 40,  unit: 'plate',  category: 'sale', aliases: ['दाल चावल', 'dal chawal'] },
+
+  // ── Sweets / Extras ──
+  { name: 'Jalebi',           price_per_unit: 30,  unit: 'plate',  category: 'sale', aliases: ['जलेबी'] },
+  { name: 'Kulfi',            price_per_unit: 20,  unit: 'piece',  category: 'sale', aliases: ['कुल्फी'] },
+  { name: 'Paan',             price_per_unit: 15,  unit: 'piece',  category: 'sale', aliases: ['पान'] },
+
+  // ── Common Expenses ──
+  { name: 'Petrol',           price_per_unit: 100, unit: 'litre',  category: 'expense', aliases: ['पेट्रोल', 'fuel'] },
+  { name: 'Oil',              price_per_unit: 180, unit: 'litre',  category: 'expense', aliases: ['तेल', 'tel', 'cooking oil'] },
+  { name: 'Flour',            price_per_unit: 35,  unit: 'kg',     category: 'expense', aliases: ['आटा', 'aata', 'maida'] },
+  { name: 'Vegetables',       price_per_unit: 50,  unit: 'kg',     category: 'expense', aliases: ['सब्ज़ी', 'sabzi', 'sabji'] },
+  { name: 'Milk',             price_per_unit: 60,  unit: 'litre',  category: 'expense', aliases: ['दूध', 'doodh'] },
+  { name: 'Sugar',            price_per_unit: 45,  unit: 'kg',     category: 'expense', aliases: ['चीनी', 'cheeni'] },
+  { name: 'Tea Leaves',       price_per_unit: 300, unit: 'kg',     category: 'expense', aliases: ['चाय पत्ती', 'chai patti'] },
+];
+
+/**
+ * Build a nicely formatted catalog string for embedding into the AI prompt.
+ */
+export function getCatalogPromptBlock(): string {
+  const saleItems = itemCatalog.filter((c) => c.category === 'sale');
+  const expenseItems = itemCatalog.filter((c) => c.category === 'expense');
+
+  let block = 'ITEM PRICE CATALOG (use these prices to calculate qty when user only gives a total amount):\n';
+  block += '\n--- Sale Items ---\n';
+  saleItems.forEach((c) => {
+    block += `• ${c.name}: ₹${c.price_per_unit} per ${c.unit} (aliases: ${c.aliases.join(', ')})\n`;
+  });
+  block += '\n--- Expense Items ---\n';
+  expenseItems.forEach((c) => {
+    block += `• ${c.name}: ₹${c.price_per_unit} per ${c.unit} (aliases: ${c.aliases.join(', ')})\n`;
+  });
+
+  return block;
+}
+
+/**
+ * Look up an item from the catalog by name (case-insensitive, checks aliases too).
+ * Returns the CatalogItem or undefined if not found.
+ */
+export function findCatalogItem(name: string): CatalogItem | undefined {
+  const lower = name.toLowerCase().trim();
+  return itemCatalog.find(
+    (c) =>
+      c.name.toLowerCase() === lower ||
+      c.aliases.some((a) => a.toLowerCase() === lower)
+  );
+}

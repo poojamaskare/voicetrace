@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Link from 'next/link';
-import { BarChart3, Mic, AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import TranscriptionResult from '@/components/TranscriptionResult';
 import { SaleItem } from '@/lib/supabase';
@@ -12,6 +11,8 @@ interface AnalyzedData {
   total_earnings: number;
   total_expenses?: number;
   date: string;
+  needs_clarification?: boolean;
+  clarification_message?: string;
 }
 
 export default function HomePage() {
@@ -85,27 +86,7 @@ export default function HomePage() {
   }, [analyzedData]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="w-full px-4 sm:px-8 py-4 flex items-center justify-between border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4.5 h-4.5">
-              <path d="M12 1a4 4 0 00-4 4v7a4 4 0 008 0V5a4 4 0 00-4-4z" />
-              <path d="M19 10v2a7 7 0 01-14 0v-2H3v2a9 9 0 004 7.47V22h2v-2.06A8.96 8.96 0 0012 21a8.96 8.96 0 003-.06V22h2v-2.53A9 9 0 0021 12v-2h-2z" />
-            </svg>
-          </div>
-          <h1 className="text-lg font-bold text-text-primary">VoiceTrace</h1>
-        </div>
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary bg-surface-light hover:bg-surface-lighter transition-all duration-200 border border-border hover:border-border-hover"
-        >
-          <BarChart3 className="w-4 h-4" />
-          Dashboard
-        </Link>
-      </header>
-
+    <div className="flex-1 flex flex-col bg-background">
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-12">
         <div className="w-full max-w-2xl mx-auto text-center space-y-8">

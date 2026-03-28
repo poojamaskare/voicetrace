@@ -161,3 +161,13 @@ body {
 .waveform-bar {
   animation: waveform 0.8s ease-in-out infinite;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
