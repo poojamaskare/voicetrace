@@ -97,7 +97,7 @@ export default function HomePage() {
             </h2>
             <p className="text-text-secondary text-lg sm:text-xl max-w-md mx-auto leading-relaxed">
               Speak your sales in{' '}
-              <span className="text-indigo-600 font-medium">Hindi</span>,{' '}
+              <span className="text-indigo-600 font-medium">हिन्दी</span>,{' '}
               <span className="text-sky-600 font-medium">English</span>, or{' '}
               <span className="text-amber-600 font-medium">Hinglish</span>
             </p>
