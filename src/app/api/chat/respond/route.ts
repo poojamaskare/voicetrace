@@ -55,56 +55,120 @@ function toCompactDbContext(input: {
   expenses: ExpenseRow[];
   sessionMessages: ChatMessageRow[];
 }) {
-  const totalSales = input.sales.reduce(
-    (sum, row) => sum + (Number(row.total) || 0),
-    0,
-  );
-  const totalExpenses = input.expenses.reduce(
+  // Use IST (UTC+5:30) for today's date to match the user's timezone
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istNow = new Date(now.getTime() + istOffset);
+  const today = istNow.toISOString().slice(0, 10);
+
+  // Group sales by date with full item details
+  const salesByDate: Record<string, { total: number; items: Array<{ name: string; qty: number; price: number; total: number; type: string }> }> = {};
+  for (const sale of input.sales) {
+    // Normalize date: Supabase DATE returns YYYY-MM-DD but handle edge cases
+    const date = String(sale.date).slice(0, 10);
+    if (!salesByDate[date]) {
+      salesByDate[date] = { total: 0, items: [] };
+    }
+    salesByDate[date].total += Number(sale.total) || 0;
+    for (const item of sale.items ?? []) {
+      salesByDate[date].items.push({
+        name: (item.name || "Unknown").trim(),
+        qty: Number(item.qty) || 0,
+        price: Number(item.price) || 0,
+        total: Number(item.total) || 0,
+        type: item.type || "sale",
+      });
+    }
+  }
+
+  // Compute overall totals
+  const totalSalesRevenue = input.sales.reduce((sum, row) => {
+    const saleItemsTotal = (row.items ?? []).filter(i => (i.type || "sale") === "sale").reduce((s, i) => s + (Number(i.total) || 0), 0);
+    return sum + saleItemsTotal;
+  }, 0);
+
+  const totalExpensesFromSales = input.sales.reduce((sum, row) => {
+    const expItemsTotal = (row.items ?? []).filter(i => i.type === "expense").reduce((s, i) => s + (Number(i.total) || 0), 0);
+    return sum + expItemsTotal;
+  }, 0);
+
+  const totalExpensesFromTable = input.expenses.reduce(
     (sum, row) => sum + (Number(row.amount) || 0),
     0,
   );
 
-  const itemRevenue: Record<string, number> = {};
+  const totalExpenses = totalExpensesFromSales + totalExpensesFromTable;
+
+  // Today-specific data
+  const todayData = salesByDate[today];
+  const todaySaleItems = todayData?.items.filter(i => i.type === "sale") ?? [];
+  const todaySalesTotal = todaySaleItems.reduce((s, i) => s + i.total, 0);
+  const todayExpenseItems = todayData?.items.filter(i => i.type === "expense") ?? [];
+  const todayExpenseTotal = todayExpenseItems.reduce((s, i) => s + i.total, 0);
+  const todayTableExpenses = input.expenses.filter(e => String(e.date).slice(0, 10) === today);
+  const todayTableExpenseTotal = todayTableExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+  // Top selling items across all dates
+  const itemRevenue: Record<string, { revenue: number; qty: number }> = {};
   for (const sale of input.sales) {
     for (const item of sale.items ?? []) {
-      if (item.type !== "sale") continue;
+      if (item.type === "expense") continue;
       const name = (item.name || "Unknown").trim();
-      const value = Number(item.total) || 0;
-      itemRevenue[name] = (itemRevenue[name] || 0) + value;
+      if (!itemRevenue[name]) itemRevenue[name] = { revenue: 0, qty: 0 };
+      itemRevenue[name].revenue += Number(item.total) || 0;
+      itemRevenue[name].qty += Number(item.qty) || 0;
     }
   }
-
   const topItems = Object.entries(itemRevenue)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, amount]) => ({ name, amount }));
+    .sort((a, b) => b[1].revenue - a[1].revenue)
+    .slice(0, 8)
+    .map(([name, data]) => ({ name, revenue: data.revenue, qty: data.qty }));
+
+  // Build daily breakdown (most recent 10 days)
+  const dailyBreakdown = Object.entries(salesByDate)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 10)
+    .map(([date, data]) => ({
+      date,
+      sale_items: data.items.filter(i => i.type === "sale").map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.total })),
+      expense_items: data.items.filter(i => i.type === "expense").map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.total })),
+      sales_total: data.items.filter(i => i.type === "sale").reduce((s, i) => s + i.total, 0),
+      expenses_total: data.items.filter(i => i.type === "expense").reduce((s, i) => s + i.total, 0),
+    }));
 
   return {
+    today_date: today,
     period_days: 30,
-    totals: {
-      sales: totalSales,
+    overall_totals: {
+      sales_revenue: totalSalesRevenue,
       expenses: totalExpenses,
-      net: totalSales - totalExpenses,
+      net: totalSalesRevenue - totalExpenses,
     },
-    recent_sales: input.sales
-      .slice(0, 5)
-      .map((s) => ({ date: s.date, total: s.total })),
-    recent_expenses: input.expenses.slice(0, 5).map((e) => ({
+    today_summary: {
+      sales_total: todaySalesTotal,
+      expenses_total: todayExpenseTotal + todayTableExpenseTotal,
+      sale_items: todaySaleItems.map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.total })),
+      expense_items: [
+        ...todayExpenseItems.map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.total })),
+        ...todayTableExpenses.map(e => ({ name: e.description || e.category, qty: 1, price: e.amount, total: e.amount })),
+      ],
+    },
+    daily_breakdown: dailyBreakdown,
+    top_sale_items: topItems,
+    recent_expenses_table: input.expenses.slice(0, 10).map((e) => ({
       date: e.date,
       amount: e.amount,
       category: e.category,
       description: e.description,
     })),
-    top_sale_items: topItems,
-    current_session_recent_messages: input.sessionMessages
-      .slice(-8)
-      .map((m) => ({
-        role: m.role,
-        mode: m.mode,
-        content: m.content,
-        created_at: m.created_at,
-      })),
   };
+}
+
+// Helper to get IST date string
+function getISTDateString(): string {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  return new Date(now.getTime() + istOffset).toISOString().slice(0, 10);
 }
 
 async function fetchDbContext(sessionId?: string): Promise<DbContextResult> {
@@ -131,46 +195,11 @@ async function fetchDbContext(sessionId?: string): Promise<DbContextResult> {
     : "anon";
   const supabase = createClient(supabaseUrl, key);
 
-  const rpcRes = await supabase.rpc("get_chat_db_context", {
-    p_session_id: sessionId ?? null,
-    p_days: 30,
-  });
+  // Always use direct queries to get fresh data with full item details
+  // (RPC function was returning stale/incomplete format)
 
-  if (!rpcRes.error && rpcRes.data) {
-    const contextFromRpc = rpcRes.data as ReturnType<typeof toCompactDbContext>;
-    return {
-      context: contextFromRpc,
-      meta: {
-        connected: true,
-        keyType,
-        salesCount: Array.isArray(
-          (contextFromRpc as { recent_sales?: unknown[] }).recent_sales,
-        )
-          ? ((contextFromRpc as { recent_sales?: unknown[] }).recent_sales
-              ?.length ?? 0)
-          : 0,
-        expensesCount: Array.isArray(
-          (contextFromRpc as { recent_expenses?: unknown[] }).recent_expenses,
-        )
-          ? ((contextFromRpc as { recent_expenses?: unknown[] }).recent_expenses
-              ?.length ?? 0)
-          : 0,
-        sessionMessagesCount: Array.isArray(
-          (contextFromRpc as { current_session_recent_messages?: unknown[] })
-            .current_session_recent_messages,
-        )
-          ? ((contextFromRpc as { current_session_recent_messages?: unknown[] })
-              .current_session_recent_messages?.length ?? 0)
-          : 0,
-        errors: [],
-      },
-    };
-  }
-
-  const now = new Date();
-  const from = new Date(now);
-  from.setDate(now.getDate() - 30);
-  const fromDate = from.toISOString().slice(0, 10);
+  const todayStr = getISTDateString();
+  const fromDate = new Date(new Date(todayStr).getTime() - 30 * 86400000).toISOString().slice(0, 10);
 
   const salesPromise = supabase
     .from("sales")
@@ -202,8 +231,6 @@ async function fetchDbContext(sessionId?: string): Promise<DbContextResult> {
   ]);
 
   const errors: string[] = [];
-  if (rpcRes.error)
-    errors.push(`rpc:get_chat_db_context: ${rpcRes.error.message}`);
   if (salesRes.error) errors.push(`sales: ${salesRes.error.message}`);
   if (expensesRes.error) errors.push(`expenses: ${expensesRes.error.message}`);
   if (sessionRes.error)
@@ -217,10 +244,17 @@ async function fetchDbContext(sessionId?: string): Promise<DbContextResult> {
     ? []
     : ((sessionRes.data ?? []) as ChatMessageRow[]);
 
+  const context = toCompactDbContext({ sales, expenses, sessionMessages });
+
+  // Debug logging to trace data issues
+  console.log(`[chat/respond] IST today=${todayStr}, sales=${sales.length}, expenses=${expenses.length}`);
+  console.log(`[chat/respond] Sales dates: ${[...new Set(sales.map(s => s.date))].join(', ')}`);
+  console.log(`[chat/respond] Today summary: sales_total=${context.today_summary.sales_total}, expense_total=${context.today_summary.expenses_total}, items=${context.today_summary.sale_items.length}`);
+
   return {
-    context: toCompactDbContext({ sales, expenses, sessionMessages }),
+    context,
     meta: {
-      connected: errors.length === 0,
+      connected: !salesRes.error && !expensesRes.error,
       keyType,
       salesCount: sales.length,
       expensesCount: expenses.length,
@@ -258,15 +292,24 @@ export async function POST(request: NextRequest) {
       ? JSON.stringify(dbResult.context)
       : '{"notice":"Database context unavailable"}';
 
+    const todayDate = getISTDateString();
     const messages: ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: `You are VoiceTrace assistant. Help the user with business, sales, product, operations, and general queries. Keep answers concise, practical, and friendly.
+        content: `You are VoiceTrace assistant, a business intelligence helper for Indian street food vendors. Today's date is ${todayDate}. Keep answers concise, practical, and friendly.
 
-You have access to VoiceTrace database context in JSON format. Use it whenever the user asks about sales, expenses, trends, performance, comparisons, or recommendations.
-If the user asks for something not in data, say so clearly and suggest what they can record.
+You have access to REAL sales and expense data from the VoiceTrace database below. ALWAYS base your answers on this actual data. When the user asks about "today", use the today_summary section. When they ask about specific dates, use daily_breakdown.
 
-DATABASE_CONTEXT_JSON:
+IMPORTANT RULES:
+- Use EXACT numbers from the data. Do NOT guess or make up figures.
+- "today_date" in the data tells you what today is.
+- "today_summary" has today's sales and expenses with full item details.
+- "daily_breakdown" has item-level details for recent days.
+- "top_sale_items" shows best sellers by revenue and quantity.
+- If asked about something not in the data, say so clearly.
+- Use ₹ (Rupee symbol) for currency.
+
+DATABASE_CONTEXT:
 ${dbContextText}`,
       },
       ...history.map((m) => ({ role: m.role, content: m.content })),

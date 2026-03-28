@@ -615,10 +615,10 @@ export default function ChatFab() {
             <select
               value={activeSessionId ?? ""}
               onChange={(e) => setActiveSessionId(e.target.value || null)}
-              className="w-full bg-white/5 border border-cyan-100/20 rounded-lg px-2.5 py-2 text-xs text-cyan-50"
+              className="w-full bg-slate-900/80 border border-cyan-100/20 rounded-lg px-2.5 py-2 text-xs text-cyan-50 focus:outline-none focus:border-cyan-400"
             >
               {sortedSessions.map((session) => (
-                <option key={session.id} value={session.id}>
+                <option key={session.id} value={session.id} className="bg-slate-900 text-cyan-50">
                   {session.title} · {session.mode}
                 </option>
               ))}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+import ChatFab from "@/components/chat/ChatFab";
 
 export const metadata: Metadata = {
   title: "VoiceTrace — Voice to Business Intelligence",
@@ -33,6 +34,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </div>
+        <ChatFab />
         <script
           dangerouslySetInnerHTML={{
             __html: `

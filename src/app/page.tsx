@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import TranscriptionResult from "@/components/TranscriptionResult";
-import ChatFab from "@/components/chat/ChatFab";
 import { SaleItem } from "@/lib/supabase";
 
 interface AnalyzedData {
@@ -164,8 +163,6 @@ export default function HomePage() {
           Built for street vendors · Powered by AI
         </p>
       </footer>
-
-      <ChatFab />
     </div>
   );
 }
